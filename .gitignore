@@ -1,1 +1,4 @@
 *.DS_Store
+build
+run-output
+data_files

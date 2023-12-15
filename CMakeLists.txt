@@ -39,4 +39,4 @@ find_package(LAPACK REQUIRED)
 add_subdirectory(src)
 add_subdirectory(executables)
 
-configure_file(fastbve-config.h.in fastbve-config.h)
+configure_file(sal-test-config.h.in sal-test-config.h)
