@@ -41,7 +41,8 @@ int main(int argc, char **argv) {
 
   std::vector<double> llns (run_information.sph_harm_comps, 0); // load love numbers
 
-  std::vector<IcosPanel> fast_sum_icos_panels;
+  std::vector<IcosPanel> fast_sum_icos_panels; // faces of the fast sum icosahedron, tree
+  std::vector<InteractPair> fast_sum_interactions; // result of dual tree traversal
 
   std::string output_folder = create_config(run_information);
 
@@ -59,6 +60,7 @@ int main(int argc, char **argv) {
   load_llns(run_information, llns);
 
   std::tuple<double, double, double> xyz;
+  std::chrono::steady_clock::time_point begin, end;
 
   if (run_information.use_fast) {
     for (int i = 0; i < run_information.point_count; i++) {
@@ -67,14 +69,24 @@ int main(int argc, char **argv) {
       yval[i] = std::get<1>(xyz);
       zval[i] = std::get<2>(xyz);
     }
+    if (ID == 0) {
+      begin = std::chrono::steady_clock::now();
+    }
 
     initialize_icosahedron(run_information, fast_sum_icos_panels, xval, yval, zval);
+
+    if (ID == 0) {
+      end = std::chrono::steady_clock::now();
+      std::cout << "icos init time: " << std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count()
+                << " microseconds" << std::endl;
+    }
   }
+
+
 
   // compute SAL
 
   double lon_t, lat_t;
-  std::chrono::steady_clock::time_point begin, end;
 
   if (ID == 0) {
     begin = std::chrono::steady_clock::now();
@@ -100,9 +112,8 @@ int main(int argc, char **argv) {
 
   if (ID == 0) {
     end = std::chrono::steady_clock::now();
-    std::cout << "convolution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end -begin).count()
+    std::cout << "convolution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count()
               << " microseconds" << std::endl;
-    begin = std::chrono::steady_clock::now();
   }
 
   std::cout << fast_sum_icos_panels.size() << std::endl;

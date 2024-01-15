@@ -66,3 +66,14 @@ std::vector<double> project_to_sphere(double x, double y, double z, const double
   z /= point_dist;
   return std::vector<double> {x, y, z};
 }
+
+double gcdist(const double x1, const double y1, const double z1, const double x2, const double y2, const double z2, const double radius) {
+  double s = (x1 * x2 + y1 * y2 + z1 * z2) / (sqrt(x1 * x1 + y1 * y1 + z1 * z1) * sqrt(x2 * x2 + y2 * y2 + z2 * z2));
+  double theta = acos(std::min(std::max(s, -1.0), 1.0));
+  return theta * radius;
+}
+
+double gcdist(const double lat1, const double lon1, const double lat2, const double lon2, const double radius) {
+  return radius * acos(std::min(1.0, std::max(-1.0, sin(lat1) * sin(lat2) +
+                                cos(lat1) * cos(lat2) * cos(lon2 - lon1))));
+}

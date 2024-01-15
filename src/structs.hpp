@@ -49,9 +49,16 @@ struct IcosPanel {
   std::vector<double> vertex_1 {0, 0, 0};
   std::vector<double> vertex_2 {0, 0, 0};
   std::vector<double> vertex_3 {0, 0, 0};
+  std::vector<double> center_p {0, 0, 0};
   double radius;
   int point_count = 0; // points inside the panel
   std::vector<int> points_inside;
+};
+
+struct InteractPair {
+  int index_target;
+  int index_source;
+  int interact_type; // 0 for PP, 1 for PC, 2 for CP, 3 for CC
 };
 
 #endif

@@ -183,5 +183,24 @@ void initialize_icosahedron(const RunConfig& run_information, std::vector<IcosPa
       }
     }
   }
-  // }
+
+  double xc, yc, zc, d1, d2, d3, d;
+  std::vector<double> vc;
+
+  for (int i = 0; i < icos_panels.size(); i++) {
+    x1 = icos_panels[i].vertex_1[0], y1 = icos_panels[i].vertex_1[1], z1 = icos_panels[i].vertex_1[2];
+    x2 = icos_panels[i].vertex_2[0], y2 = icos_panels[i].vertex_2[1], z2 = icos_panels[i].vertex_2[2];
+    x3 = icos_panels[i].vertex_3[0], y3 = icos_panels[i].vertex_3[1], z3 = icos_panels[i].vertex_3[2];
+    xc = (x1 + x2 + x3) / 3.0;
+    yc = (y1 + y2 + y3) / 3.0;
+    zc = (z1 + z2 + z3) / 3.0;
+    vc = project_to_sphere(xc, yc, zc, run_information.radius);
+    xc = vc[0], yc = vc[1], zc = vc[2];
+    icos_panels[i].center_p[0] = xc, icos_panels[i].center_p[1] = yc, icos_panels[i].center_p[2] = zc;
+    d1 = pow(x1 - xc, 2) + pow(y1 - yc, 2) + pow(z1 - zc, 2);
+    d2 = pow(x2 - xc, 2) + pow(y2 - yc, 2) + pow(z2 - zc, 2);
+    d3 = pow(x3 - xc, 2) + pow(y3 - yc, 2) + pow(z3 - zc, 2);
+    d = std::max(d1, std::max(d2, d3));
+    icos_panels[i].radius = sqrt(d);
+  }
 }
