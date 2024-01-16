@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <queue>
 
 #include "general_utils.hpp"
 #include "structs.hpp"
@@ -102,14 +103,6 @@ void initialize_icosahedron(const RunConfig& run_information, std::vector<IcosPa
     if ((icos_panels[i].is_leaf) and (icos_panels[i].point_count > run_information.fast_sum_cluster_thresh)) {
       // refine, create 4 new sub-panels
       IcosPanel sub_panel1, sub_panel2, sub_panel3, sub_panel4;
-      sub_panel1.parent_panel = &icos_panels[i];
-      sub_panel2.parent_panel = &icos_panels[i];
-      sub_panel3.parent_panel = &icos_panels[i];
-      sub_panel4.parent_panel = &icos_panels[i];
-      icos_panels[i].child_panel_1 = &sub_panel1;
-      icos_panels[i].child_panel_2 = &sub_panel2;
-      icos_panels[i].child_panel_3 = &sub_panel3;
-      icos_panels[i].child_panel_4 = &sub_panel4;
       x1 = icos_panels[i].vertex_1[0], y1 = icos_panels[i].vertex_1[1], z1 = icos_panels[i].vertex_1[2];
       x2 = icos_panels[i].vertex_2[0], y2 = icos_panels[i].vertex_2[1], z2 = icos_panels[i].vertex_2[2];
       x3 = icos_panels[i].vertex_3[0], y3 = icos_panels[i].vertex_3[1], z3 = icos_panels[i].vertex_3[2];
@@ -133,6 +126,14 @@ void initialize_icosahedron(const RunConfig& run_information, std::vector<IcosPa
       sub_panel2.id = start + 1;
       sub_panel3.id = start + 2;
       sub_panel4.id = start + 3;
+      sub_panel1.parent_panel = icos_panels[i].id;
+      sub_panel2.parent_panel = icos_panels[i].id;
+      sub_panel3.parent_panel = icos_panels[i].id;
+      sub_panel4.parent_panel = icos_panels[i].id;
+      icos_panels[i].child_panel_1 = sub_panel1.id;
+      icos_panels[i].child_panel_2 = sub_panel2.id;
+      icos_panels[i].child_panel_3 = sub_panel3.id;
+      icos_panels[i].child_panel_4 = sub_panel4.id;
       icos_panels.push_back(sub_panel1);
       icos_panels.push_back(sub_panel2);
       icos_panels.push_back(sub_panel3);
@@ -202,5 +203,99 @@ void initialize_icosahedron(const RunConfig& run_information, std::vector<IcosPa
     d3 = pow(x3 - xc, 2) + pow(y3 - yc, 2) + pow(z3 - zc, 2);
     d = std::max(d1, std::max(d2, d3));
     icos_panels[i].radius = sqrt(d);
+  }
+}
+
+void dual_tree_traversal(const RunConfig& run_information, std::vector<InteractPair>& interactions, const std::vector<IcosPanel>& icos_panels) {
+  // performs dual tree traversal to find {P,C} - {P,C} interactions
+  std::queue<int> target_triangles;
+  std::queue<int> source_triangles;
+
+  for (int i = 0; i < 20; i++) {
+    for (int j = 0; j < 20; j++) {
+      target_triangles.push(i);
+      source_triangles.push(j);
+    }
+  }
+
+  int index_target, index_source;
+  double x1, x2, y1, y2, z1, z2, dist, separation;
+
+  while (target_triangles.size() > 0) {
+    index_target = target_triangles.front();
+    index_source = source_triangles.front();
+    target_triangles.pop();
+    source_triangles.pop();
+    if (icos_panels[index_target].point_count == 0) continue;
+    if (icos_panels[index_source].point_count == 0) continue;
+    x1 = icos_panels[index_target].center_p[0], y1 = icos_panels[index_target].center_p[1], z1 = icos_panels[index_target].center_p[2];
+    x2 = icos_panels[index_source].center_p[0], y2 = icos_panels[index_source].center_p[1], z2 = icos_panels[index_source].center_p[2];
+    dist = gcdist(x1, y1, z1, x2, y2, z2, run_information.radius);
+    separation = (icos_panels[index_target].radius + icos_panels[index_source].radius) / dist;
+    if ((dist > 0) and (separation < run_information.fast_sum_theta)) {
+      // triangles are well separated
+      InteractPair new_interact = {index_target, index_source, 0};
+      if (icos_panels[index_target].point_count >= run_information.fast_sum_cluster_thresh) {
+        new_interact.interact_type += 2;
+      }
+      if (icos_panels[index_source].point_count >= run_information.fast_sum_cluster_thresh) {
+        new_interact.interact_type += 1;
+      }
+      interactions.push_back(new_interact);
+    } else {
+      // not well separated
+      if ((icos_panels[index_target].point_count < run_information.fast_sum_cluster_thresh) and (icos_panels[index_source].point_count < run_information.fast_sum_cluster_thresh)) {
+        // both have few points
+        InteractPair new_interact = {index_target, index_source, 0};
+        interactions.push_back(new_interact);
+      } else if (icos_panels[index_target].is_leaf and icos_panels[index_source].is_leaf) {
+        // both are leaves
+        InteractPair new_interact = {index_target, index_source, 0};
+        interactions.push_back(new_interact);
+      } else if (icos_panels[index_target].is_leaf) {
+        // target is leaf, break apart source
+        target_triangles.push(index_target);
+        target_triangles.push(index_target);
+        target_triangles.push(index_target);
+        target_triangles.push(index_target);
+        source_triangles.push(icos_panels[index_source].child_panel_1);
+        source_triangles.push(icos_panels[index_source].child_panel_2);
+        source_triangles.push(icos_panels[index_source].child_panel_3);
+        source_triangles.push(icos_panels[index_source].child_panel_4);
+      } else if (icos_panels[index_source].is_leaf) {
+        // source is leaf, break apart target
+        source_triangles.push(index_source);
+        source_triangles.push(index_source);
+        source_triangles.push(index_source);
+        source_triangles.push(index_source);
+        target_triangles.push(icos_panels[index_target].child_panel_1);
+        target_triangles.push(icos_panels[index_target].child_panel_2);
+        target_triangles.push(icos_panels[index_target].child_panel_3);
+        target_triangles.push(icos_panels[index_target].child_panel_4);
+      } else {
+        // neither is leaf, break apart triangle with more points
+        if (icos_panels[index_target].point_count >= icos_panels[index_source].point_count) {
+          // target has more points, break apart target
+          source_triangles.push(index_source);
+          source_triangles.push(index_source);
+          source_triangles.push(index_source);
+          source_triangles.push(index_source);
+          target_triangles.push(icos_panels[index_target].child_panel_1);
+          target_triangles.push(icos_panels[index_target].child_panel_2);
+          target_triangles.push(icos_panels[index_target].child_panel_3);
+          target_triangles.push(icos_panels[index_target].child_panel_4);
+        } else {
+          // source has more points, break apart source
+          target_triangles.push(index_target);
+          target_triangles.push(index_target);
+          target_triangles.push(index_target);
+          target_triangles.push(index_target);
+          source_triangles.push(icos_panels[index_source].child_panel_1);
+          source_triangles.push(icos_panels[index_source].child_panel_2);
+          source_triangles.push(icos_panels[index_source].child_panel_3);
+          source_triangles.push(icos_panels[index_source].child_panel_4);
+        }
+      }
+    }
   }
 }

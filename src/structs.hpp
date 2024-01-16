@@ -41,11 +41,16 @@ struct IcosPanel {
   int level = 0; // refinement level, level 0 = base icosahedron
   bool is_leaf = true; // whether or not this is a leaf panel
   int id; // location in vector
-  IcosPanel* parent_panel;
-  IcosPanel* child_panel_1;
-  IcosPanel* child_panel_2;
-  IcosPanel* child_panel_3;
-  IcosPanel* child_panel_4;
+  // IcosPanel* parent_panel;
+  // IcosPanel* child_panel_1;
+  // IcosPanel* child_panel_2;
+  // IcosPanel* child_panel_3;
+  // IcosPanel* child_panel_4;
+  int parent_panel = -1;
+  int child_panel_1 = -1;
+  int child_panel_2 = -1;
+  int child_panel_3 = -1;
+  int child_panel_4 = -1;
   std::vector<double> vertex_1 {0, 0, 0};
   std::vector<double> vertex_2 {0, 0, 0};
   std::vector<double> vertex_3 {0, 0, 0};

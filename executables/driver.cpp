@@ -80,6 +80,18 @@ int main(int argc, char **argv) {
       std::cout << "icos init time: " << std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count()
                 << " microseconds" << std::endl;
     }
+
+    if (ID == 0) {
+      begin = std::chrono::steady_clock::now();
+    }
+
+    dual_tree_traversal(run_information, fast_sum_interactions, fast_sum_icos_panels);
+
+    if (ID == 0) {
+      end = std::chrono::steady_clock::now();
+      std::cout << "dual tree traversal time: " << std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count()
+                << " microseconds" << std::endl;
+    }
   }
 
 
@@ -117,6 +129,7 @@ int main(int argc, char **argv) {
   }
 
   std::cout << fast_sum_icos_panels.size() << std::endl;
+  std::cout << fast_sum_interactions.size() << std::endl;
 
   // write output
   std::string outpath = run_information.out_path + "/" + output_folder + "/output_sal.csv";
