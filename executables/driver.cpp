@@ -12,6 +12,7 @@
 #include "green_func.hpp"
 #include "general_utils.hpp"
 #include "icos_funcs.hpp"
+#include "fast_sum_funcs.hpp"
 
 int main(int argc, char **argv) {
   // initialize everything
