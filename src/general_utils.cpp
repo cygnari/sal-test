@@ -2,6 +2,7 @@
 #include <string>
 #include <cmath>
 #include <tuple>
+#include <cassert>
 
 extern "C" { // lapack
 extern int dgesv_(int *, int *, double *, int *, int *, double *, int *, int *);
@@ -58,6 +59,14 @@ std::tuple<double, double, double> latlon_to_xyz(const double lat, const double 
   return xyz;
 }
 
+std::tuple<double, double> xyz_to_latlon(const double x, const double y, const double z) {
+  // turns cartesian coordinates to spherical coordinates
+  double colat, lon;
+  colat = atan2(sqrt(x * x + y * y), z); // colatitude
+  lon = atan2(y, x);                   // longitude
+  return std::make_tuple(M_PI / 2.0 - colat, lon);
+}
+
 std::vector<double> project_to_sphere(double x, double y, double z, const double radius) {
   // projects (x, y, z) to sphere of radius
   double point_dist = sqrt(x * x + y * y + z * z);
@@ -76,4 +85,22 @@ double gcdist(const double x1, const double y1, const double z1, const double x2
 double gcdist(const double lat1, const double lon1, const double lat2, const double lon2, const double radius) {
   return radius * acos(std::min(1.0, std::max(-1.0, sin(lat1) * sin(lat2) +
                                 cos(lat1) * cos(lat2) * cos(lon2 - lon1))));
+}
+
+std::vector<double> barycoords(const std::vector<double> &p1,
+                               const std::vector<double> &p2,
+                               const std::vector<double> &p3,
+                               const double x, const double y, const double z) {
+  // finds triangle barycentric coordinates of point p
+  assert(p1.size() == 3);
+  assert(p2.size() == 3);
+  assert(p3.size() == 3);
+  std::vector<double> coords {x, y, z};
+  std::vector<double> mat{p1[0], p1[1], p1[2], p2[0], p2[1],
+                          p2[2], p3[0], p3[1], p3[2]};
+  int info = linear_solve(mat, coords, 3, 1, 1);
+  if (info != 0) {
+    throw std::runtime_error("Error in barycentric coordinate computation, line 94");
+  }
+  return coords;
 }

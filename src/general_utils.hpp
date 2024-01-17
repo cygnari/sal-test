@@ -7,10 +7,17 @@ int linear_solve(const std::vector<double> &a_matrix, std::vector<double> &b_vec
 
 std::tuple<double, double, double> latlon_to_xyz(const double lat, const double lon, const double radius);
 
+std::tuple<double, double> xyz_to_latlon(const double x, const double y, const double z);
+
 std::vector<double> project_to_sphere(double x, double y, double z, const double radius);
 
 double gcdist(const double x1, const double y1, const double z1, const double x2, const double y2, const double z2, const double radius);
 
 double gcdist(const double lat1, const double lon1, const double lat2, const double lon2, const double radius);
+
+std::vector<double> barycoords(const std::vector<double> &p1,
+                               const std::vector<double> &p2,
+                               const std::vector<double> &p3,
+                               const double x, const double y, const double z);
 
 #endif

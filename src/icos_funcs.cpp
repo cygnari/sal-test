@@ -203,6 +203,9 @@ void initialize_icosahedron(const RunConfig& run_information, std::vector<IcosPa
     d3 = pow(x3 - xc, 2) + pow(y3 - yc, 2) + pow(z3 - zc, 2);
     d = std::max(d1, std::max(d2, d3));
     icos_panels[i].radius = sqrt(d);
+    if (icos_panels[i].point_count != icos_panels[i].points_inside.size()) {
+      throw std::runtime_error("Error in icosahedron initialization, line 207");
+    }
   }
 }
 
