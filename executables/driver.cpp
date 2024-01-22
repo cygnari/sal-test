@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
 
   if (run_information.use_fast) {
     // fast summation
+    fast_sum_compute(run_information, fast_sum_interactions, fast_sum_icos_panels, lats, lons, xval, yval, zval, sshs, area, sals, llns);
 
   } else {
     // direct summation

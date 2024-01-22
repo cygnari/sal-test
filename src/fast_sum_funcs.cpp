@@ -3,6 +3,7 @@
 #include "green_func.hpp"
 #include "general_utils.hpp"
 #include "interp_utils.hpp"
+#include <iostream>
 
 void pp_interaction(const RunConfig& run_information, const int index_target, const int index_source, const std::vector<IcosPanel>& icos_panels,
                     const std::vector<double>& lats, const std::vector<double>& lons, const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<double>& zs,
@@ -70,10 +71,10 @@ void pc_interaction(const RunConfig& run_information, const int index_target, co
     }
   }
 
-  for (int i = 0; i < dim; i++) { // set up interpolation matrix
+  for (int i = 0; i < dim; i++) { // set up interpolation matrix, loop over proxy source points
     us = interp_points[i][0];
     vs = interp_points[i][1];
-    ws = 1.0 - us - vs;
+    ws = interp_points[i][2];
     cx = us * v1s[0] + vs * v2s[0] + ws * v3s[0];
     cy = us * v1s[1] + vs * v2s[1] + ws * v3s[1];
     cz = us * v1s[2] + vs * v2s[2] + ws * v3s[2];
@@ -84,15 +85,24 @@ void pc_interaction(const RunConfig& run_information, const int index_target, co
     bary_cord = barycoords(v1s, v2s, v3s, cx, cy, cz);
     interp_points[i]=bary_cord;
     auto [clat, clon] = xyz_to_latlon(cx, cy, cz);
-    for (int j = 0; j < count_target; j++) {
+    for (int j = 0; j < count_target; j++) { // loop over targets
       tlon = tlons[j];
       tlat = tlats[j];
-      offset = j * dim + i;
-      func_vals[offset] = sal_gfunc(tlat, tlon, clat, clon, run_information.sph_harm_comps, llns);
+      func_vals[j * dim + i] = sal_ces_gfunc(tlat, tlon, clat, clon, run_information.sph_harm_comps, llns);
     }
   }
 
+  // std::cout << "interp points" << std::endl;
+  // for (int i = 0; i < interp_points.size(); i++) {
+  //   std::cout << interp_points[i][0] << "," << interp_points[i][1] << "," << interp_points[i][2] << std::endl;
+  // }
+
   interp_mat_init_sbb(interp_matrix, interp_points, run_information.interp_degree, dim);
+
+  // std::cout << "interp matrix" << std::endl;
+  // for (int i = 0; i < interp_matrix.size(); i++) {
+  //   std::cout << interp_matrix[i] << std::endl;
+  // }
 
   info = linear_solve(interp_matrix, func_vals, dim, count_target, 3);
   if (info > 0) {
@@ -103,6 +113,13 @@ void pc_interaction(const RunConfig& run_information, const int index_target, co
     point_index = icos_panels[index_target].points_inside[i];
     for (int j = 0; j < dim; j++) {
       alpha = func_vals[dim*i+j];
+      // if (alpha * proxy_weights[j] > 1) {
+      //   std::cout << "alpha: " << alpha << " proxy weight " << proxy_weights[j] << std::endl;
+      //   for (int i = 0; i < func_vals.size(); i++) {
+      //     std::cout << func_vals[i] << std::endl;
+      //   }
+      //   throw std::runtime_error("Magnitude too large");
+      // }
       sals[point_index] += alpha * proxy_weights[j];
     }
   }

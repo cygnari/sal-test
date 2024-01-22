@@ -27,38 +27,16 @@ void fekete_init(std::vector<std::vector<double>> &points, const int degree) {
   for (int i = 0; i < degree + 1; i++) {
     a = 1 - i * delta_x;
     a = 0.5 * (1 + sin(M_PI / 2 * (2 * a - 1)));
-    part = a;
     for (int j = 0; j < i + 1; j++) {
       index = i * (i + 1) / 2 + j;
       c = j * delta_x;
       b = i*delta_x - b;
       b = 0.5 * (1 + sin(M_PI / 2 * (2 * b - 1)));
       c = 0.5 * (1 + sin(M_PI / 2 * (2 * c - 1)));
-      part += b + c;
+      part = a + b + c;
       points[index][0] = a / part;
       points[index][1] = b / part;
       points[index][2] = c / part;
-    }
-  }
-}
-
-void interp_mat_init(
-    std::vector<double> &mat, const std::vector<std::vector<double>> &points,
-    const int degree,
-    const int point_count) { // sets up matrix to interpolate with fekete points
-  // simple polynomial in s and t, barycentric coordinates
-  // for example, for deg 2, evaluates 1, s, t, s^2, st, t^2 at interpolation points
-  int index, place;
-  double a, b;
-  for (int i = 0; i < degree + 1; i++) {
-    for (int j = 0; j < i + 1; j++) {
-      index = i * (i + 1) / 2 + j;
-      for (int k = 0; k < point_count; k++) {
-        a = points[k][0];
-        b = points[k][1];
-        place = index * point_count + k;
-        mat[place] = pow(a, i - j) * pow(b, j);
-      }
     }
   }
 }
@@ -70,42 +48,28 @@ void interp_mat_init_sbb(
   // uses spherical bezier bernstein polynomials
   // for example, for deg 2, evaluates s^2, t^2, u^2, st, su, tu at interpolation points
   int index = 0, place;
-  double s, t, u, si, tj, uk, comp, val, spart = 1, factor, tpart=1;
+  double s, t, u, si, tj, uk, comp, val, spart = 1, tpart=1;
   for (int k = 0; k < point_count; k++) {
     s = points[k][0];
     t = points[k][1];
     u = points[k][2];
     index = 0;
     spart = 1;
-    // factor = t/u;
+    tpart = 1;
     for (int i = 0; i < degree + 1; i++) {
-      // val = spart * pow(u, degree-i);
       for (int j = 0; j < degree+1-i; j++) {
-        val = spart * tpart * pow(u, degree-i-j);
+        val = spart * tpart;
+        if (degree - i -j != 0) {
+          val *= pow(u, degree-i-j);
+        }
         place = point_count * index + k;
         mat[place] = val;
         index++;
-        val *= factor;
         tpart *= t;
       }
       spart *= s;
     }
   }
-}
-
-double interp_eval(
-    const std::vector<double> &alphas, const double s, const double t,
-    const int degree) { // evaluate interpolation polynomial with coefficients
-                        // alpha and barycentric point (s, t)
-  double accum = 0;
-  int index;
-  for (int i = 0; i < degree + 1; i++) {
-    for (int j = 0; j < i + 1; j++) {
-      index = i * (i + 1) / 2 + j;
-      accum += pow(s, i - j) * pow(t, j) * alphas[index];
-    }
-  }
-  return accum;
 }
 
 std::vector<double> interp_vals_sbb(const double s, const double t, const double u, const int degree) {
