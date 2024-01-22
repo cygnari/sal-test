@@ -9,6 +9,8 @@ std::tuple<double, double, double> latlon_to_xyz(const double lat, const double 
 
 std::tuple<double, double> xyz_to_latlon(const double x, const double y, const double z);
 
+std::tuple<double, double> xyz_to_latlon(const std::vector<double>& point);
+
 std::vector<double> project_to_sphere(double x, double y, double z, const double radius);
 
 double gcdist(const double x1, const double y1, const double z1, const double x2, const double y2, const double z2, const double radius);

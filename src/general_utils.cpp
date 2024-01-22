@@ -67,6 +67,14 @@ std::tuple<double, double> xyz_to_latlon(const double x, const double y, const d
   return std::make_tuple(M_PI / 2.0 - colat, lon);
 }
 
+std::tuple<double, double> xyz_to_latlon(const std::vector<double>& point) {
+  // turns cartesian coordinates to spherical coordinates
+  double colat, lon;
+  colat = atan2(sqrt(point[0] * point[0] + point[1] * point[1]), point[2]); // colatitude
+  lon = atan2(point[1], point[2]);                                          // longitude
+  return std::make_tuple(M_PI / 2.0 - colat, lon);
+}
+
 std::vector<double> project_to_sphere(double x, double y, double z, const double radius) {
   // projects (x, y, z) to sphere of radius
   double point_dist = sqrt(x * x + y * y + z * z);
