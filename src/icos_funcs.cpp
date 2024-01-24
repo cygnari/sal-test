@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <queue>
+#include <cmath>
 
 #include "general_utils.hpp"
 #include "structs.hpp"

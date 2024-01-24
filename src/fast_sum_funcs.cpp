@@ -4,6 +4,7 @@
 #include "general_utils.hpp"
 #include "interp_utils.hpp"
 #include <iostream>
+#include <cmath>
 
 void pp_interaction(const RunConfig& run_information, const int index_target, const int index_source, const std::vector<IcosPanel>& icos_panels,
                     const std::vector<double>& lats, const std::vector<double>& lons, const std::vector<double>& xs, const std::vector<double>& ys, const std::vector<double>& zs,
