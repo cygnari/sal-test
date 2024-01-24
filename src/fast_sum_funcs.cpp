@@ -31,7 +31,7 @@ void pp_interaction(const RunConfig& run_information, const int index_target, co
     lon_x = lons[target_i];
     lat_x = lats[target_i];
     for (int j = 0; j < source_count; j++) {
-      gfval = sal_gfunc(lat_x, lon_x, lats_y[j], lons_y[j], run_information.sph_harm_comps, llns);
+      gfval = sal_ces_gfunc(lat_x, lon_x, lats_y[j], lons_y[j], run_information.sph_harm_comps, llns);
       sals[target_i] += gfval * area_y[j] * sshs_y[j];
     }
   }
@@ -165,7 +165,7 @@ void cp_interaction(const RunConfig& run_information, const int index_target, co
       point_index = icos_panels[index_source].points_inside[j];
       slon = lons_y[j];
       slat = lats_y[j];
-      interptargets[i] += sal_gfunc(clat, clon, slat, slon, run_information.sph_harm_comps, llns) * sshs_y[j] * area_y[j];
+      interptargets[i] += sal_ces_gfunc(clat, clon, slat, slon, run_information.sph_harm_comps, llns) * sshs_y[j] * area_y[j];
     }
   }
 
@@ -279,7 +279,7 @@ void cc_interaction(const RunConfig& run_information, const int index_target, co
     auto [ctlat, ctlon] = xyz_to_latlon(target_particle);
     for (int j = 0; j < dim; j++) { // loop over proxy source particles
       auto [cslat, cslon] = xyz_to_latlon(proxy_source_points[j]);
-      func_vals[dim*i + j] = sal_gfunc(ctlat, ctlon, cslat, cslon, run_information.sph_harm_comps, llns);
+      func_vals[dim*i + j] = sal_ces_gfunc(ctlat, ctlon, cslat, cslon, run_information.sph_harm_comps, llns);
     }
   }
 

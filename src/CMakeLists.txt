@@ -4,7 +4,8 @@ add_library(sal-test
     green_func.cpp
     icos_funcs.cpp
     interp_utils.cpp
-    io_utils.cpp)
+    io_utils.cpp
+    mpi_utils.cpp)
 
 target_link_libraries(sal-test PUBLIC MPI::MPI_C LAPACK::LAPACK)
 target_include_directories(sal-test PUBLIC
@@ -21,5 +22,6 @@ install(FILES
     interp_utils.hpp
     io_utils.hpp
     icos_funcs.hpp
+    mpi_utils.hpp
     structs.hpp
     DESTINATION ${PROJECT_SOURCE_DIR}/include)

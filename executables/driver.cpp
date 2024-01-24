@@ -13,6 +13,7 @@
 #include "general_utils.hpp"
 #include "icos_funcs.hpp"
 #include "fast_sum_funcs.hpp"
+#include "mpi_utils.hpp"
 
 int main(int argc, char **argv) {
   // initialize everything
@@ -21,6 +22,7 @@ int main(int argc, char **argv) {
   MPI_Status status;
   MPI_Comm_size(MPI_COMM_WORLD, &P);
   MPI_Comm_rank(MPI_COMM_WORLD, &ID);
+  MPI_Win win_sal;
 
   RunConfig run_information;
   const std::string namelist_file = std::string(NAMELIST_DIR) + std::string("namelist.txt");
@@ -39,6 +41,8 @@ int main(int argc, char **argv) {
   std::vector<double> sshs (run_information.point_count, 0); // sea surface height, meters
   std::vector<double> sals (run_information.point_count, 0); // SAL potential
   std::vector<double> area (run_information.point_count, 0); // area of each grid cell
+
+  MPI_Win_create(&sals[0], run_information.point_count * sizeof(double), sizeof(double), MPI_INFO_NULL, MPI_COMM_WORLD, &win_sal);
 
   std::vector<double> llns (run_information.sph_harm_comps, 0); // load love numbers
 
@@ -112,17 +116,21 @@ int main(int argc, char **argv) {
   } else {
     // direct summation
     for (int i = 0; i < run_information.point_count; i++) {
-      lat_t = lats[i];
-      lon_t = lons[i];
-      for (int j = 0; j < run_information.point_count; j++) {
-        if (run_information.use_cesaro) {
+      if (i % P == ID) {
+        lat_t = lats[i];
+        lon_t = lons[i];
+        for (int j = 0; j < run_information.point_count; j++) {
           sals[i] += sshs[j] * area[j] * sal_ces_gfunc(lat_t, lon_t, lats[j], lons[j], run_information.sph_harm_comps, llns);
-        } else {
-          sals[i] += sshs[j] * area[j] * sal_gfunc(lat_t, lon_t, lats[j], lons[j], run_information.sph_harm_comps, llns);
         }
       }
     }
   }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  sync_updates<double>(sals, P, ID, &win_sal, MPI_DOUBLE);
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   if (ID == 0) {
     end = std::chrono::steady_clock::now();
@@ -132,6 +140,8 @@ int main(int argc, char **argv) {
 
   std::cout << fast_sum_icos_panels.size() << std::endl;
   std::cout << fast_sum_interactions.size() << std::endl;
+
+  // std::cout << sal_gfunc(0, 0, M_PI / 2.0, 0, 5, llns) << std::endl;
 
   // write output
   std::string outpath = run_information.out_path + "/" + output_folder + "/output_sal.csv";
