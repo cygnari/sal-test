@@ -7,7 +7,7 @@
 struct RunConfig {
   bool use_fast = false;
   bool use_cesaro = false; // use cesaro summed kernel or not
-  std::string out_path;    // ../run-output/ locally, on Derecho, /glade/derecho/scratch/achen/bve/
+  std::string out_path;    // ../run-output/ locally, on Derecho, /glade/derecho/scratch/achen/sal/
   int write_precision = 6; // number of decimal places, 6 for data visualization, 16 for error testing
   bool write_output = false;
   double radius = 1.0;
